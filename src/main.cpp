@@ -29,19 +29,19 @@ void detect(void)
 int main() {
     green = 1;
     red = 1;
+    blue = 0;
     button.fall(detect);
 
     ecg_sender_init();
 
-    pc.baud(9600);
+    pc.baud(115200);
 #ifdef DEBUG
     pc.printf("Start...\n");
 #endif
-    ecg_sender_send(&pc); 
+
     while(1) {
-        blue = 1;
-        wait(0.2);
-        blue = 0;
-        wait(0.2);
+        ecg_sender_send(&pc); 
+        wait(0.002048);
+        //blue = !blue;
     }
 }
