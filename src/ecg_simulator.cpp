@@ -26,35 +26,6 @@ ecg::FlatEcgPredictor ecgPredictor;
 ecg::DifferenceEcgCompressor compressor(compressFifo, ecgPredictor);
 Packetizer packetizer;
 
-#if 0
-static bool put_sample(const int32_t* channels) 
-{
-	for (unsigned int i = 0; i < nHardwareChannels[0]; ++i) 
-    {
-		int32_t diff = channels[i] - ecgPredictor.getPrediction(i);
-		bool okay = true;
-		if (diff >= smallMin && diff <= smallMax) 
-        {
-			okay &= compressFifo.pushBits(0, 1);
-			okay &= compressFifo.pushBits(diff, smallBitNum);
-		} 
-        else 
-        {
-			okay &= compressFifo.pushBits(1, 1);
-			okay &= compressFifo.pushBits(channels[i], fullBitNum);
-		}
-		
-        if(!okay)
-        {
-			return false;
-        }
-	}
-	ecgPredictor.putSample(channels);
-	
-    return true;
-}
-#endif
-
 void ecg_sender_init(void)
 {
     ecgSenderData.currLsbInMv = ECG_LSB_IN_MV / 6.0;
