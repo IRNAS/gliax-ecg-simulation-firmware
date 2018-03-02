@@ -1,6 +1,8 @@
 #include "mbed.h"
 #include "ecg_simulator.h"
 
+//#define DEBUG
+
 #define LED_GREEN   p21
 #define LED_RED     p22
 #define LED_BLUE    p23
@@ -32,8 +34,9 @@ int main() {
     ecg_sender_init();
 
     pc.baud(9600);
+#ifdef DEBUG
     pc.printf("Start...\n");
-
+#endif
     ecg_sender_send(&pc); 
     while(1) {
         blue = 1;

@@ -127,23 +127,46 @@ void ecg_sender_send(Serial *pc)
 	ecgHeader->numBits = compressFifo.getAvailableBits();
 	size = (ecgHeader->numBits + 7) / 8;
 
+#ifdef DEBUG
+    pc->printf("Sending packet.\n");
+#endif
+
 	//Send header
 	packetizer.startPacket(header, Packetizer::ECG, (uint16_t)(size+sizeof(ECGHeader)));
 	packetizer.checksumBlock((uint8_t*)ecgHeader, sizeof(ECGHeader));
-    //Add serial/bluetooth communication to send header
-    //(char*)header, Packetizer::HEADER_SIZE + sizeof(ECGHeader)
+#ifdef DEBUG
+    pc->printf("Packet size: %d \n", (Packetizer::HEADER_SIZE + sizeof(ECGHeader)));
+#endif
+    for (unsigned int i = 0; i < (Packetizer::HEADER_SIZE + sizeof(ECGHeader)); i++)
+    {
+        pc->putc(header[i]);
+    }
     
     //Calculate checksum over compressBuffer and add to final checksum value
 	packetizer.checksumBlock(ecgSenderData.compressBuffer, size);
-    //Add serial/bluetooth communication to send compressBuffer
-    //(char*)compressBuffer,
+    //Send compressBuffer (data)
+#ifdef DEBUG
+    pc->printf("\nCompressBuffer Size: %d\n", size);
+#endif
+    for (unsigned int i = 0; i < (size); i++)
+    {
+        pc->putc(ecgSenderData.compressBuffer[i]);
+    }
 
 	//Send checksum
 	Packetizer::Checksum chksum = packetizer.getChecksum();
+#ifdef DEBUG
+    pc->printf("Checksum Size: %d\n", sizeof(chksum));
+#endif
+    for (unsigned int i = 0; i < sizeof(chksum); i++)
+    {
+        pc->putc((char)((chksum >> (8*i)) & 0x00FF));
+    }
 
-    //Add serial/bluetooth communication to send checksum
-    //(char*)&chksum
-
-    pc->printf("First message from inside function\n");
+#ifdef DEBUG
+    pc->printf("Size: %d\n", size); 
+    pc->printf("Length: %d\n", (uint16_t)(size+sizeof(ECGHeader)));
+    pc->printf("Checksum is %d\n", chksum);
+#endif
 }
 
