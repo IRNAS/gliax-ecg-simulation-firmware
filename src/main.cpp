@@ -3,45 +3,79 @@
 
 //#define DEBUG
 
-#define LED_GREEN   p21
-#define LED_RED     p22
-#define LED_BLUE    p23
-#define BUTTON_PIN  p17
+DigitalOut led1(LED1);
+DigitalOut led2(LED2);
+InterruptIn button1(BUTTON1);
+InterruptIn button2(BUTTON2);
 
-//#define UART_TX     p9
-#define UART_TX     p3
-//#define UART_RX     p11
-#define UART_RX     p4
+Serial pc(USBTX, USBRX);
 
-DigitalOut blue(LED_BLUE);
-DigitalOut green(LED_GREEN);
-DigitalOut red(LED_RED);
-InterruptIn button(BUTTON_PIN);
+enum {
+    IDLE        = 0,
+    SEND_ONCE   = 1,
+    SEND_ALWAYS = 2,
+};
 
-Serial pc(UART_TX, UART_RX);
+uint8_t state;
 
-void detect(void)
+void button1_detect(void)
 {
-    pc.printf("Button pressed\n");  
-    green = !green;
+    led1 = 1;
+    state = SEND_ONCE;
 }
 
-int main() {
-    green = 1;
-    red = 1;
-    blue = 0;
-    button.fall(detect);
+void button2_detect(void)
+{
+    led2 = 1;
+    state = SEND_ALWAYS;
+}
 
-    ecg_sender_init();
+int main() 
+{
+    //Initialize variables
+    state = IDLE;
+    button1.fall(button1_detect);
+    button2.fall(button2_detect);
+    
+    led1 = 0;
+    led2 = 0;
+    //ecg_sender_init();
 
     pc.baud(115200);
 #ifdef DEBUG
     pc.printf("Start...\n");
 #endif
 
-    while(1) {
-        ecg_sender_send(&pc); 
-        wait(0.002048);
+    while(1) 
+    {
+        switch (state)
+        {
+            case IDLE:
+                led1 = 0;
+                led2 = 0;
+                break;
+
+            case SEND_ONCE:
+                ecg_sender_send(&pc);
+                wait(0.2);
+
+                state = IDLE;
+                break;
+            
+            case SEND_ALWAYS:
+                ecg_sender_send(&pc);
+                wait(0.002048);
+
+                break;
+        }
+        //ecg_sender_send(&pc); 
+        //wait(0.002048);
         //blue = !blue;
+        //led1 = 1;
+        //led2 = 1;
+        //wait(0.5);
+        //led1 = 0;
+        //led2 = 0;
+        //wait(0.5);
     }
 }
